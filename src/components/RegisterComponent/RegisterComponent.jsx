@@ -3,6 +3,7 @@ import tinyTalesLogo from "../../assets/TinyTales.webp";
 import { useState } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import https from "https"; // Required for ignoring SSL issues
 
 function RegisterComponent() {
   const [clientNameValidation, showClientNameValidation] = useState(false);
@@ -44,22 +45,33 @@ function RegisterComponent() {
     event.preventDefault();
 
     // Make the POST request using axios with the correct payload structure
-    axios
-      //.post("http://localhost:8080/registerTinyTalesClient", formData)
-      .post("https://tiny-tales-git-backend-zo-test-git.apps.nprdc-ocp.dhdigital.co.in/registerTinyTalesClient", formData)
-      .then((response) => {
-        const successMessage =
-          response.data.RegisterTinyTalesClientResponse.success.message;
-        toast.success(successMessage); // Display success message
-      })
-      .catch((error) => {
-        console.log(error);
-        const errorMessage =
-          error.response?.data?.RegisterTinyTalesClientResponse?.fault
-            ?.description || "An error occurred!";
-        toast.error(errorMessage); // Display error message
-      });
-  };
+    
+const agent = new https.Agent({
+  rejectUnauthorized: false, // Ignore SSL certificate errors
+});
+
+axios
+  .post(
+    "https://tiny-tales-git-backend-zo-test-git.apps.nprdc-ocp.dhdigital.co.in/registerTinyTalesClient",
+    formData,
+    {
+      headers: { "Content-Type": "application/json" },
+      withCredentials: true, // Enable if using authentication
+      httpsAgent: agent, // Ignore SSL certificate errors
+    }
+  )
+  .then((response) => {
+    const successMessage =
+      response.data.RegisterTinyTalesClientResponse.success.message;
+    toast.success(successMessage); // Display success message
+  })
+  .catch((error) => {
+    console.log(error);
+    const errorMessage =
+      error.response?.data?.RegisterTinyTalesClientResponse?.fault?.description ||
+      "An error occurred!";
+    toast.error(errorMessage); // Display error message
+  });
 
   // Validation logic
   const fieldValidation = (data) => {
